@@ -1,0 +1,21 @@
+[Unit]
+Description=isucon12 qualify official Go webapp
+After=network.target mysql.service
+Requires=mysql.service
+
+[Service]
+Type=simple
+User=isucon
+Group=isucon
+WorkingDirectory=/home/isucon/webapp/go
+Environment=ISUCON_DB_HOST=127.0.0.1
+Environment=ISUCON_DB_PORT=3306
+Environment=ISUCON_DB_USER=isucon
+Environment=ISUCON_DB_PASSWORD=isucon
+Environment=ISUCON_DB_NAME=isuports
+ExecStart=/home/isucon/webapp/go/isuports
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target

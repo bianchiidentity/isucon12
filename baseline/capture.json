@@ -1,0 +1,8 @@
+{
+  "captured_at_utc": "2026-10-10T04:10:18.814825+00:00",
+  "source_home": "/home/isucon",
+  "initial_sqlite_files": 100,
+  "scope": "Observed server files before performance tuning; not a guaranteed pristine AMI or live database backup",
+  "blackauth": "Installed binary preserved because no source files are present on this server",
+  "runtime_tenant_databases": "Excluded; reconstruct from initial_data"
+}

@@ -1,0 +1,12 @@
+character_set_server	utf8mb4
+collation_server	utf8mb4_0900_ai_ci
+datadir	/var/lib/mysql/
+innodb_buffer_pool_size	134217728
+innodb_flush_log_at_trx_commit	1
+log_bin	ON
+long_query_time	10.000000
+max_connections	151
+slow_query_log	OFF
+socket	/var/run/mysqld/mysqld.sock
+sync_binlog	1
+version	8.0.46-0ubuntu0.22.04.4

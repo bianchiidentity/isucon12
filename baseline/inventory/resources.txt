@@ -1,0 +1,6 @@
+2
+               total        used        free      shared  buff/cache   available
+Mem:      4023136256   884600832   134950912     2883584  3003584512  2864689152
+Swap:              0           0           0
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/root        20G  7.9G   12G  41% /

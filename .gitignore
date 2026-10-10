@@ -1,0 +1,35 @@
+# Generated data / runtime databases
+/initial_data/
+/webapp/tenant_db/
+/webapp/sql/admin/90_data.sql
+*.db
+*.db-shm
+*.db-wal
+*.log
+*.pid
+._*
+.DS_Store
+__pycache__/
+*.pyc
+node_modules/
+vendor/
+target/
+/webapp/go/isuports
+/bench/bench
+/bench/pr-comment
+/bench/entrypoint
+/blackauth/blackauth
+/webapp/php/composer.phar
+# Credentials and local environment
+.ssh/
+.aws/
+.codex/
+.env
+.env.*
+!.env.example
+*.key
+*key.pem
+id_ed25519*
+id_rsa*
+/bench/isuports.pem
+/blackauth/isuports.pem

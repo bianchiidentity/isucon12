@@ -1,0 +1,6 @@
+net.core.somaxconn = 4096
+net.ipv4.ip_local_port_range = 32768	60999
+net.ipv4.tcp_max_syn_backlog = 256
+net.ipv4.tcp_fin_timeout = 60
+vm.swappiness = 60
+fs.file-max = 9223372036854775807
