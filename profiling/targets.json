@@ -1,0 +1,26 @@
+[
+  {
+    "Duration": 60,
+    "Label": "isuports-go",
+    "Type": "pprof",
+    "URL": "http://127.0.0.1:6060/debug/pprof/profile"
+  },
+  {
+    "Duration": 60,
+    "Label": "nginx",
+    "Type": "httplog",
+    "URL": "http://127.0.0.1:19000/debug/log/httplog"
+  },
+  {
+    "Duration": 60,
+    "Label": "mysql",
+    "Type": "slowlog",
+    "URL": "http://127.0.0.1:19000/debug/log/slowlog"
+  },
+  {
+    "Duration": 60,
+    "Label": "sqlite",
+    "Type": "slowlog",
+    "URL": "http://127.0.0.1:19001/debug/log/slowlog"
+  }
+]

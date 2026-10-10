@@ -1,0 +1,21 @@
+[Unit]
+Description=pprotein SQLite log collection agent
+After=network.target nginx.service mysql.service
+
+[Service]
+User=isucon
+Group=isucon
+WorkingDirectory=/home/isucon/isucon12
+Environment=PORT=19001
+Environment=PPROTEIN_HTTPLOG=/var/log/nginx/pprotein-access.log
+Environment=PPROTEIN_SLOWLOG=/home/isucon/tools/pprotein/runtime/sqlite-slow.log
+Environment=PPROTEIN_GIT_REPOSITORY=/home/isucon/isucon12
+ExecStart=/home/isucon/tools/pprotein/bin/pprotein-agent
+Restart=on-failure
+RestartSec=2
+NoNewPrivileges=true
+IPAddressDeny=any
+IPAddressAllow=localhost
+
+[Install]
+WantedBy=multi-user.target

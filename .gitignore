@@ -15,6 +15,7 @@ node_modules/
 vendor/
 target/
 /webapp/go/isuports
+/webapp/go/isuports.pprotein
 /bench/bench
 /bench/pr-comment
 /bench/entrypoint

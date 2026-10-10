@@ -1,0 +1,19 @@
+[Unit]
+Description=pprotein performance dashboard
+After=network.target pprotein-agent.service
+
+[Service]
+User=isucon
+Group=isucon
+WorkingDirectory=/home/isucon/tools/pprotein/runtime
+Environment=PORT=9000
+Environment=PATH=/home/isucon/tools/pprotein/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ExecStart=/home/isucon/tools/pprotein/bin/pprotein
+Restart=on-failure
+RestartSec=2
+NoNewPrivileges=true
+IPAddressDeny=any
+IPAddressAllow=localhost
+
+[Install]
+WantedBy=multi-user.target

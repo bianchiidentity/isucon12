@@ -1,0 +1,11 @@
+{
+  "pprotein": "v1.2.4",
+  "alp": "v1.0.22",
+  "slp": "v0.2.3",
+  "binaries_sha256": {
+    "alp": "dd36de09967fad6c502896db6b85bc7af7667e880fbd9682d4395c0b36fe6c8c",
+    "pprotein": "661e4015e82b679aa095f10880597142103fa96707e334756d36a04fcf1ceab8",
+    "pprotein-agent": "33f499c1049a1af571983e913bd444afaa6f179a4b5c0ff4761f14fb54c4fc44",
+    "slp": "294744c6811d833bca6ef993bbcb4531ddcbd12359d115f6af81c9e30daa16b9"
+  }
+}

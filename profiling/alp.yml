@@ -1,0 +1,8 @@
+sort: sum
+reverse: true
+query_string: false
+matching_groups:
+  - ^/api/player/competition/[^/]+/ranking$
+  - ^/api/player/player/[^/]+$
+  - ^/api/organizer/player/[^/]+/disqualified$
+  - ^/api/organizer/competition/[^/]+/(score|finish)$
