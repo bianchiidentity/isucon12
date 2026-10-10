@@ -49,7 +49,7 @@ SSH秘密鍵、AWS/GitHub認証情報、TLS秘密鍵、JWT秘密鍵、実行ロ�
 - 保存した `/etc` 設定は比較・復旧用。サーバー固有のパスとホスト名を確認して必要なファイルだけ適用し、その後 `nginx -t`、systemdのdaemon-reloadなどを実施する。
 - 初期状態の関連サービス `isuports`, `blackauth`, `nginx`, `mysql`, `redis-server` はすべて enabled / active。取得結果は `baseline/inventory/services.txt`。
 - `blackauth` はこのサーバーにソースがなく、実行ファイルに秘密鍵が埋め込まれているため除外した。復旧では元サーバーのバイナリを安全な方法で引き継ぐか、公式ソースから再構築する。`/etc/nginx/tls/key.pem` とJWT署名鍵も別途安全に引き継ぐ。Gitに含めない。
-- ベンチ用 `benchmarker*.json` はこのサーバーに存在しない。ベンチ実行環境のデータは公式リリース等から別途用意する。
+- ベンチ用の検証データ `bench/benchmarker.json` と `bench/benchmarker_tenant.json` も保存した。元の `bench/.gitignore` の対象だが、初期状態の再現に必要なため明示的に追跡している。
 - この保存はファイルと設定の基準点。ライブDB、OSイメージ、AWS構成やネットワーク設定を含む完全なサーバーバックアップではない。
 
 ## 過去のISUCONを踏まえた選定根拠
