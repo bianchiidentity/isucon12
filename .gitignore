@@ -12,6 +12,10 @@
 __pycache__/
 *.pyc
 node_modules/
+# Issue diagrams: published as Release assets, never application data
+/.issue-slides/
+# Benchmark review snapshots and draft comments
+/.bench-review/
 vendor/
 target/
 /webapp/go/isuports
