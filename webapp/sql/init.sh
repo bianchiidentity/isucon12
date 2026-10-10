@@ -19,3 +19,8 @@ mysql -u"$ISUCON_DB_USER" \
 # SQLiteのデータベースを初期化
 rm -f ../tenant_db/*.db
 cp -r ../../initial_data/*.db ../tenant_db/
+
+# 配布初期データの原本は変更せず、復元した全テナントに索引を適用する。
+for db in ../tenant_db/*.db; do
+	sqlite3 -bail "$db" < tenant/20_indexes.sql
+done

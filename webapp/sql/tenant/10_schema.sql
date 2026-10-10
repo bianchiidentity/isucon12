@@ -30,3 +30,10 @@ CREATE TABLE player_score (
   created_at BIGINT NOT NULL,
   updated_at BIGINT NOT NULL
 );
+
+-- tenant/20_indexes.sqlと同じ索引を新規テナントにも作成する。
+CREATE INDEX player_score_competition_row
+  ON player_score (tenant_id, competition_id, row_num DESC);
+
+CREATE INDEX player_score_competition_player_row
+  ON player_score (tenant_id, competition_id, player_id, row_num DESC);
