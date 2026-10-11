@@ -1192,7 +1192,7 @@ func playerHandler(c echo.Context) error {
 		return fmt.Errorf("error flockByTenantID: %w", err)
 	}
 	defer fl.Close()
-	pss := make([]PlayerScoreRow, 0, len(cs))
+	psds := make([]PlayerScoreDetail, 0, len(cs))
 	for _, c := range cs {
 		ps := PlayerScoreRow{}
 		if err := tenantDB.GetContext(
@@ -1210,17 +1210,9 @@ func playerHandler(c echo.Context) error {
 			}
 			return fmt.Errorf("error Select player_score: tenantID=%d, competitionID=%s, playerID=%s, %w", v.tenantID, c.ID, p.ID, err)
 		}
-		pss = append(pss, ps)
-	}
-
-	psds := make([]PlayerScoreDetail, 0, len(pss))
-	for _, ps := range pss {
-		comp, err := retrieveCompetition(ctx, tenantDB, ps.CompetitionID)
-		if err != nil {
-			return fmt.Errorf("error retrieveCompetition: %w", err)
-		}
+		// 大会一覧は作成日時順で取得済み。大会名も再問い合わせせず利用する。
 		psds = append(psds, PlayerScoreDetail{
-			CompetitionTitle: comp.Title,
+			CompetitionTitle: c.Title,
 			Score:            ps.Score,
 		})
 	}
