@@ -20,8 +20,8 @@ mysql -u"$ISUCON_DB_USER" \
 rm -f ../tenant_db/*.db
 cp -r ../../initial_data/*.db ../tenant_db/
 
-# 配布初期データの原本は変更せず、復元した全テナントに索引を適用する。
+# 原本は変更せず、重複行を削除してから残った行に索引を作る。
 for db in ../tenant_db/*.db; do
-	sqlite3 -bail "$db" < tenant/20_indexes.sql
 	sqlite3 -bail "$db" < tenant/30_compact_scores.sql
+	sqlite3 -bail "$db" < tenant/20_indexes.sql
 done
