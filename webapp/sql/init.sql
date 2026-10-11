@@ -1,3 +1,5 @@
+DELETE FROM billing_reports;
+DELETE FROM billing_versions;
 DELETE FROM tenant WHERE id > 100;
 -- With per-player MIN timestamps, baseline visits remain unchanged by later visits.
 -- Groups containing only post-baseline visits are removed. No reaggregation needed.

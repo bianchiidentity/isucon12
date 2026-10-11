@@ -525,6 +525,37 @@ func billingReportByCompetition(ctx context.Context, tenantDB dbOrTx, tenantID i
 		}, nil
 	}
 
+	// Cache hits do not need SQLite score reads or the tenant lock.
+	if counts, err := loadBillingCounts(ctx, tenantID, comp); err == nil {
+		return makeBillingReport(comp, counts.PlayerCount, counts.VisitorCount), nil
+	} else if err != sql.ErrNoRows {
+		return nil, err
+	}
+	// Lock order: tenant flock first, then MySQL. Visits never take the flock
+	// while their transaction is open. Re-read the finish boundary under lock.
+	fl, err := flockByTenantID(tenantID)
+	if err != nil {
+		return nil, err
+	}
+	defer fl.Close()
+	comp, err = retrieveCompetition(ctx, tenantDB, competitonID)
+	if err != nil {
+		return nil, err
+	}
+	if !comp.FinishedAt.Valid {
+		return &BillingReport{CompetitionID: comp.ID, CompetitionTitle: comp.Title}, nil
+	}
+	cached, err := loadBillingCounts(ctx, tenantID, comp)
+	if err == nil {
+		return makeBillingReport(comp, cached.PlayerCount, cached.VisitorCount), nil
+	}
+	if err != sql.ErrNoRows {
+		return nil, err
+	}
+	var version uint64
+	if err := adminDB.GetContext(ctx, &version, "SELECT COALESCE(MAX(version),0) FROM billing_versions WHERE tenant_id=? AND competition_id=?", tenantID, comp.ID); err != nil {
+		return nil, err
+	}
 	// ランキングにアクセスした参加者のIDを取得する
 	vhs := []VisitHistorySummaryRow{}
 	if err := adminDB.SelectContext(
@@ -544,13 +575,6 @@ func billingReportByCompetition(ctx context.Context, tenantDB dbOrTx, tenantID i
 		}
 		billingMap[vh.PlayerID] = "visitor"
 	}
-
-	// player_scoreを読んでいるときに更新が走ると不整合が起こるのでロックを取得する
-	fl, err := flockByTenantID(tenantID)
-	if err != nil {
-		return nil, fmt.Errorf("error flockByTenantID: %w", err)
-	}
-	defer fl.Close()
 
 	// スコアを登録した参加者のIDを取得する
 	scoredPlayerIDs := []string{}
@@ -579,15 +603,14 @@ func billingReportByCompetition(ctx context.Context, tenantDB dbOrTx, tenantID i
 			}
 		}
 	}
-	return &BillingReport{
-		CompetitionID:     comp.ID,
-		CompetitionTitle:  comp.Title,
-		PlayerCount:       playerCount,
-		VisitorCount:      visitorCount,
-		BillingPlayerYen:  100 * playerCount, // スコアを登録した参加者は100円
-		BillingVisitorYen: 10 * visitorCount, // ランキングを閲覧だけした(スコアを登録していない)参加者は10円
-		BillingYen:        100*playerCount + 10*visitorCount,
-	}, nil
+	// A visit racing the calculation advances the version. The stored
+	// report then cannot be used on the next read; no timer-based finalization.
+	if _, err := adminDB.ExecContext(ctx, `REPLACE INTO billing_reports
+ (tenant_id, competition_id, finished_at, version, player_count, visitor_count)
+ VALUES (?,?,?,?,?,?)`, tenantID, comp.ID, comp.FinishedAt.Int64, version, playerCount, visitorCount); err != nil {
+		return nil, err
+	}
+	return makeBillingReport(comp, playerCount, visitorCount), nil
 }
 
 type TenantWithBilling struct {
@@ -939,6 +962,11 @@ func competitionFinishHandler(c echo.Context) error {
 	if id == "" {
 		return echo.NewHTTPError(http.StatusBadRequest, "competition_id required")
 	}
+	fl, err := flockByTenantID(v.tenantID)
+	if err != nil {
+		return err
+	}
+	defer fl.Close()
 	_, err = retrieveCompetition(ctx, tenantDB, id)
 	if err != nil {
 		// 存在しない大会
@@ -1030,11 +1058,21 @@ func competitionScoreHandler(c echo.Context) error {
 		return fmt.Errorf("error flockByTenantID: %w", err)
 	}
 	defer fl.Close()
+	comp, err = retrieveCompetition(ctx, tenantDB, competitionID)
+	if err != nil {
+		return err
+	}
+	if comp.FinishedAt.Valid {
+		return c.JSON(http.StatusBadRequest, FailureResult{Status: false, Message: "competition is finished"})
+	}
 	playerScoreRows, inputRows, err := readCompetitionScores(ctx, tenantDB, v.tenantID, competitionID, r)
 	if err != nil {
 		return err
 	}
 
+	if _, err := adminDB.ExecContext(ctx, "DELETE FROM billing_reports WHERE tenant_id=? AND competition_id=?", v.tenantID, competitionID); err != nil {
+		return err
+	}
 	if err := replaceCompetitionScores(ctx, tenantDB, v.tenantID, competitionID, playerScoreRows); err != nil {
 		return err
 	}

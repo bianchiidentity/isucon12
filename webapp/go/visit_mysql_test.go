@@ -142,6 +142,60 @@ func TestFirstVisitMySQL(t *testing.T) {
 				if err != nil || report.PlayerCount != 1 || report.VisitorCount != 3 || report.BillingYen != 130 {
 					t.Fatalf("billing: %#v %v", report, err)
 				}
+				// Reuse the persisted report without reading SQLite scores.
+				reads := tenantDB.selects
+				cached, err := billingReportByCompetition(ctx, tenantDB, 1, "c")
+				if err != nil || cached.BillingYen != 130 || tenantDB.selects != reads {
+					t.Fatalf("cache not reused: %#v %v", cached, err)
+				}
+				// A same-second visit arriving after persistence must invalidate it.
+				if err := recordFirstVisit(ctx, db, 1, "c", "delayed", cutoff+100); err != nil {
+					t.Fatal(err)
+				}
+				updated, err := billingReportByCompetition(ctx, tenantDB, 1, "c")
+				if err != nil || updated.BillingYen != 140 {
+					t.Fatalf("delayed visit: %#v %v", updated, err)
+				}
+				// An earlier timestamp arriving later must also refresh the report.
+				if err := recordFirstVisit(ctx, db, 1, "c", "after", cutoff+99); err != nil {
+					t.Fatal(err)
+				}
+				updated, err = billingReportByCompetition(ctx, tenantDB, 1, "c")
+				if err != nil || updated.BillingYen != 150 {
+					t.Fatalf("earlier timestamp: %#v %v", updated, err)
+				}
+				// Repeated/later visits do not change the revision or rebuild scores.
+				reads = tenantDB.selects
+				if err := recordFirstVisit(ctx, db, 1, "c", "delayed", cutoff+200); err != nil {
+					t.Fatal(err)
+				}
+				if _, err := billingReportByCompetition(ctx, tenantDB, 1, "c"); err != nil || tenantDB.selects != reads {
+					t.Fatalf("no-op visit invalidated: %v", err)
+				}
+				// A visit arriving during calculation makes that saved revision stale.
+				if _, err := db.Exec("DELETE FROM billing_reports WHERE tenant_id=1 AND competition_id='c'"); err != nil {
+					t.Fatal(err)
+				}
+				racing := &billingRaceTestDB{rankingTestDB: tenantDB, hook: func() error { return recordFirstVisit(ctx, db, 1, "c", "during-calculation", cutoff+100) }}
+				if _, err := billingReportByCompetition(ctx, racing, 1, "c"); err != nil {
+					t.Fatal(err)
+				}
+				updated, err = billingReportByCompetition(ctx, tenantDB, 1, "c")
+				if err != nil || updated.BillingYen != 160 {
+					t.Fatalf("calculation race: %#v %v", updated, err)
+				}
+				// Failure to advance the revision must roll back the visit as well.
+				if _, err := db.Exec("RENAME TABLE billing_versions TO billing_versions_test_backup"); err != nil {
+					t.Fatal(err)
+				}
+				failure := recordFirstVisit(ctx, db, 1, "c", "rolled-back", cutoff+1)
+				if _, err := db.Exec("RENAME TABLE billing_versions_test_backup TO billing_versions"); err != nil {
+					t.Fatal(err)
+				}
+				var rolledBack int
+				if err := db.Get(&rolledBack, "SELECT COUNT(*) FROM visit_history WHERE player_id='rolled-back'"); err != nil || failure == nil || rolledBack != 0 {
+					t.Fatalf("atomic invalidation: count=%d err=%v failure=%v", rolledBack, err, failure)
+				}
 				if _, err := db.Exec(string(initialize)); err != nil {
 					t.Fatal(err)
 				}
@@ -157,4 +211,20 @@ func TestFirstVisitMySQL(t *testing.T) {
 			}
 		})
 	}
+}
+
+type billingRaceTestDB struct {
+	*rankingTestDB
+	hook func() error
+}
+
+func (db *billingRaceTestDB) SelectContext(ctx context.Context, dest interface{}, query string, args ...interface{}) error {
+	if db.hook != nil {
+		hook := db.hook
+		db.hook = nil
+		if err := hook(); err != nil {
+			return err
+		}
+	}
+	return db.rankingTestDB.SelectContext(ctx, dest, query, args...)
 }
