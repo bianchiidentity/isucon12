@@ -38,3 +38,5 @@ id_ed25519*
 id_rsa*
 /bench/isuports.pem
 /blackauth/isuports.pem
+# Browser E2E recordings and screen-guide slides (Release assets only)
+/.e2e-artifacts/
