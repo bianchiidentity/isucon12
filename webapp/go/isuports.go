@@ -530,7 +530,7 @@ func billingReportByCompetition(ctx context.Context, tenantDB dbOrTx, tenantID i
 	if err := adminDB.SelectContext(
 		ctx,
 		&vhs,
-		"SELECT player_id, MIN(created_at) AS min_created_at FROM visit_history WHERE tenant_id = ? AND competition_id = ? GROUP BY player_id",
+		"SELECT player_id, created_at AS min_created_at FROM visit_history WHERE tenant_id = ? AND competition_id = ?",
 		tenantID,
 		comp.ID,
 	); err != nil && err != sql.ErrNoRows {
@@ -1216,21 +1216,8 @@ func competitionRankingHandler(c echo.Context) error {
 		return fmt.Errorf("error retrieveCompetition: %w", err)
 	}
 
-	now := time.Now().Unix()
-	var tenant TenantRow
-	if err := adminDB.GetContext(ctx, &tenant, "SELECT * FROM tenant WHERE id = ?", v.tenantID); err != nil {
-		return fmt.Errorf("error Select tenant: id=%d, %w", v.tenantID, err)
-	}
-
-	if _, err := adminDB.ExecContext(
-		ctx,
-		"INSERT INTO visit_history (player_id, tenant_id, competition_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
-		v.playerID, tenant.ID, competitionID, now, now,
-	); err != nil {
-		return fmt.Errorf(
-			"error Insert visit_history: playerID=%s, tenantID=%d, competitionID=%s, createdAt=%d, updatedAt=%d, %w",
-			v.playerID, tenant.ID, competitionID, now, now, err,
-		)
+	if err := recordFirstVisit(ctx, adminDB, v.tenantID, competitionID, v.playerID, time.Now().Unix()); err != nil {
+		return err
 	}
 
 	var rankAfter int64
@@ -1247,7 +1234,7 @@ func competitionRankingHandler(c echo.Context) error {
 		return fmt.Errorf("error flockByTenantID: %w", err)
 	}
 	defer fl.Close()
-	pagedRanks, err := retrieveCompetitionRanks(ctx, tenantDB, tenant.ID, competitionID, rankAfter)
+	pagedRanks, err := retrieveCompetitionRanks(ctx, tenantDB, v.tenantID, competitionID, rankAfter)
 	if err != nil {
 		return err
 	}
