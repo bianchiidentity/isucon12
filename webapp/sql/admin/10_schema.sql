@@ -1,5 +1,7 @@
 USE `isuports`;
 
+DROP TABLE IF EXISTS billing_reports;
+DROP TABLE IF EXISTS billing_versions;
 DROP TABLE IF EXISTS `tenant`;
 DROP TABLE IF EXISTS `id_generator`;
 DROP TABLE IF EXISTS `visit_history`;
@@ -31,4 +33,21 @@ CREATE TABLE `visit_history` (
   INDEX `visit_history_created_at` (`created_at`),
   INDEX `tenant_id_idx` (`tenant_id`),
   INDEX `visit_history_billing` (`tenant_id`, `competition_id`, `player_id`, `created_at`)
+) ENGINE=InnoDB DEFAULT CHARACTER SET=utf8mb4;
+
+CREATE TABLE billing_versions (
+ tenant_id BIGINT UNSIGNED NOT NULL,
+ competition_id VARCHAR(255) NOT NULL,
+ version BIGINT UNSIGNED NOT NULL DEFAULT 0,
+ PRIMARY KEY (tenant_id, competition_id)
+) ENGINE=InnoDB DEFAULT CHARACTER SET=utf8mb4;
+
+CREATE TABLE billing_reports (
+ tenant_id BIGINT UNSIGNED NOT NULL,
+ competition_id VARCHAR(255) NOT NULL,
+ finished_at BIGINT NOT NULL,
+ version BIGINT UNSIGNED NOT NULL,
+ player_count BIGINT NOT NULL,
+ visitor_count BIGINT NOT NULL,
+ PRIMARY KEY (tenant_id, competition_id)
 ) ENGINE=InnoDB DEFAULT CHARACTER SET=utf8mb4;

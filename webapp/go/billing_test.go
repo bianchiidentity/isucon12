@@ -45,7 +45,9 @@ func TestBillingSkipsOngoingAndCalculatesAfterFinish(t *testing.T) {
 	}
 	// The billing query is exercised on SQLite as a test double for MySQL.
 	adminDB = db.DB
-	if _, err := db.Exec(`CREATE TABLE visit_history (tenant_id INTEGER, competition_id TEXT, player_id TEXT, created_at INTEGER, PRIMARY KEY (tenant_id, competition_id, player_id));
+	if _, err := db.Exec(`CREATE TABLE billing_versions (tenant_id INTEGER, competition_id TEXT, version INTEGER, PRIMARY KEY(tenant_id,competition_id));
+ CREATE TABLE billing_reports (tenant_id INTEGER, competition_id TEXT, finished_at INTEGER, version INTEGER, player_count INTEGER, visitor_count INTEGER, PRIMARY KEY(tenant_id,competition_id));
+ CREATE TABLE visit_history (tenant_id INTEGER, competition_id TEXT, player_id TEXT, created_at INTEGER, PRIMARY KEY (tenant_id, competition_id, player_id));
  INSERT INTO visit_history VALUES
  (1,'c','scored',1), (1,'c','visitor',99),
  (1,'c','same-second',100), (1,'c','too-late',101),
