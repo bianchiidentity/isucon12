@@ -43,11 +43,11 @@ func TestBillingSkipsOngoingAndCalculatesAfterFinish(t *testing.T) {
 	if _, err := billingReportByCompetition(ctx, db, 1, "missing"); !errors.Is(err, sql.ErrNoRows) {
 		t.Fatalf("missing competition: %v", err)
 	}
-	// The unchanged aggregation SQL is exercised on SQLite as a test double for MySQL.
+	// The billing query is exercised on SQLite as a test double for MySQL.
 	adminDB = db.DB
-	if _, err := db.Exec(`CREATE TABLE visit_history (tenant_id INTEGER, competition_id TEXT, player_id TEXT, created_at INTEGER);
+	if _, err := db.Exec(`CREATE TABLE visit_history (tenant_id INTEGER, competition_id TEXT, player_id TEXT, created_at INTEGER, PRIMARY KEY (tenant_id, competition_id, player_id));
  INSERT INTO visit_history VALUES
- (1,'c','scored',1), (1,'c','visitor',99), (1,'c','visitor',101),
+ (1,'c','scored',1), (1,'c','visitor',99),
  (1,'c','same-second',100), (1,'c','too-late',101),
  (2,'c','other-tenant',1), (1,'other','other-competition',1);
  UPDATE competition SET finished_at=100 WHERE id='c'`); err != nil {
