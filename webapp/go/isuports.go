@@ -729,7 +729,7 @@ func playersListHandler(c echo.Context) error {
 	); err != nil {
 		return fmt.Errorf("error Select player: %w", err)
 	}
-	var pds []PlayerDetail
+	pds := make([]PlayerDetail, 0, len(pls))
 	for _, p := range pls {
 		pds = append(pds, PlayerDetail{
 			ID:             p.ID,
